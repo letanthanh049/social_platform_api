@@ -11,38 +11,34 @@ export class ScrapperService {
         private readonly scrapperModel: mongoose.Model<Scrapper>
     ) { }
 
-    async autoScroll(page: any) {
-        await page.evaluate(async () => {
-            await new Promise<void>((resolve) => {
-                let totalHeight = 0;
-                const distance = 16
-                
-                const timer = setInterval(() => {
-                    const scrollHeight = document.body.scrollHeight;
-                    window.scrollBy(0, distance);
-                    totalHeight += distance;
-
-                    if (totalHeight >= scrollHeight) {
-                        clearInterval(timer);
-                        resolve();
-                    }
-                }, 1000);
-            });
-        });
-    }
-
     async getDataFromWebsite() {
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
-        await page.goto('https://www.youtube.com/@EddievanderMeer/channels?view=56&shelf_id=0', {});
+        await page.setViewport({ width: 1280, height: 14000 })
+        await page.goto('https://www.youtube.com/@letanthanh9866/channels',);
+        await page.evaluate(() => { window.scrollBy(0, window.innerHeight); });
+        await page.keyboard.press('Backspace', { delay: 2000 });
+        const allChannelsEleHandle = await page.$$('#contents #items ytd-grid-channel-renderer');
+        const promises = allChannelsEleHandle.map(
+            async (eleHandle) => {
+                // return await eleHandle.evaluate((domElement) => domElement.outerHTML);
+                // return await eleHandle.$eval('#title', element => element.textContent)
+                return await eleHandle.$eval('#channel-info', element => element.getAttribute('href'))
+            });
+        const channels = await Promise.all(promises);
 
-        // Scroll to the bottom of the page to load more subscribed channels
-        await this.autoScroll(page);
-
-        // Capture the DOM after scrolling
-        const DOM = await page.content();
-
+        let isExist = false;
+        channels.forEach(ch => {
+            // if (ch.length == 'L'.length && ch === 'L') {
+            //     isExist = true;
+            //     return;
+            // }
+            if (ch === '/@TheKidLAROI') {
+                isExist = true;
+                return;
+            }
+        })
         await browser.close();
-        return DOM;
+        return isExist;
     };
 }
