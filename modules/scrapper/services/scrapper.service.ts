@@ -37,17 +37,10 @@ export class ScrapperService {
         await page.goto(urlChannel);
         await page.evaluate(() => { window.scrollBy(0, window.innerHeight); });
         await page.keyboard.press('Backspace', { delay: 2000 });
-        const channelListElement = await page.$$('#contents #items ytd-grid-channel-renderer');
-        const promises = channelListElement.map(
-            async (channel) => {
-                return await channel.$eval('#channel-info', element => element.getAttribute('href'))
-            });
-        const channels = await Promise.all(promises);
-
-        // const channels = await page.$$eval('#contents #items ytd-grid-channel-renderer',
-        //     elements => elements.map(
-        //         channel => channel.querySelector('#channel-info').getAttribute('href')
-        //     ));
+        const channels = await page.$$eval('#contents #items ytd-grid-channel-renderer',
+            elements => elements.map(
+                channel => channel.querySelector('#channel-info').getAttribute('href')
+            ));
 
         let isExist = false;
         channels.forEach(ch => {
@@ -105,7 +98,7 @@ export class ScrapperService {
     }
 
     async checkTwitterSubcribe(urlChannel: string, subcriber: string) {
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 900, height: 1280 });
 
@@ -128,10 +121,22 @@ export class ScrapperService {
         await page.goto(urlChannel);
         await page.waitForSelector('div[data-testid="cellInnerDiv"]');
         const containerElement = await page.$('section[role=region]');
-        const followingList = await containerElement.$$eval('div[data-testid="cellInnerDiv"]',
+        let followingList = await containerElement.$$eval('div[data-testid="cellInnerDiv"]',
             elements => elements.map(
                 user => user.querySelector('a').getAttribute('href')
             ));
+        for (let i = 1; i <= 2; i++) {
+            await page.evaluate(() => {
+                window.scrollBy(0, window.innerHeight + 1700);
+                setTimeout(() => { console.log("Channel is loading") }, 1400);
+            });
+            const containerElement = await page.$('section[role=region]');
+            const newFollowingList = await containerElement.$$eval('div[data-testid="cellInnerDiv"]',
+                elements => elements.map(
+                    user => user.querySelector('a').getAttribute('href')
+                ));
+            followingList = [...followingList, ...newFollowingList]
+        }
 
         let isExist = false;
         followingList.forEach(user => {
@@ -139,32 +144,50 @@ export class ScrapperService {
                 isExist = true;
                 return;
             }
-        })
+        });
         return isExist;
-        return 0;
     }
 
-    // async checkValidShopeeAccount(urlChannel: string, code: string) {
-
-    // }
-
-    // async checkShopeeSubcribe(urlChannel: string) {
-
-    // }
-
-    // async checkValidLazadaAccount(urlChannel: string, code: string) {
-
-    // }
-
-    // async checkLazadaSubcribe(urlChannel: string) {
-
-    // }
-
-    // async checkValidGoogleMapAccount(urlChannel: string, code: string) {
-
-    // }
-
-    // async checkGoogleMapSubcribe(urlChannel: string) {
-
-    // }
+    async checkGoogleMapRating(urlLocation: string, username: string) {
+        const browser = await puppeteer.launch({ headless: false });
+        const page = await browser.newPage();
+        await page.setViewport({ width: 900, height: 1280 });
+        await page.goto(urlLocation);
+        await page.waitForSelector('.RWPxGd');
+        await page.click('.RWPxGd button:nth-child(2)');
+        await page.waitForSelector('button[aria-label="Sort reviews"]');
+        await page.click('button[aria-label="Sort reviews"]');
+        await page.waitForSelector('div[role="menuitemradio"]');
+        await page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
+        await page.keyboard.press('Backspace', { delay: 1000 });
+        await page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', element => {
+            for (let i = 1; i <= 25; i++) {
+                setTimeout(() => {
+                    element.scrollBy(0, element.scrollHeight + 1200);
+                    console.log("Rating is loading");
+                }, i * 500);
+            }
+        });
+        /** 
+         * Promise này dùng để chờ sau khi scroll xong hết 30 lần mới lấy danh sách rating
+         * => thời gian chờ của promise = tổng số lần scroll (hiện tại là 30) * 500
+         */
+        const promise = new Promise((resolve
+            ) => {
+            setTimeout(async () => {
+                resolve(await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
+                    ratingInfo => {
+                        return {
+                            username: ratingInfo.getAttribute('aria-label'),
+                            description: ratingInfo.querySelector('.wiI7pd')?.innerHTML,
+                            timeRating: ratingInfo.querySelector('.rsqaWe').innerHTML,
+                        }
+                    }
+                )))
+            }, 12500); 
+        });
+        const users: any = await promise;
+        console.log(users.length);
+        return users;
+    }
 }

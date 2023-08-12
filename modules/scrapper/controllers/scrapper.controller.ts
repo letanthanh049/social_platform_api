@@ -53,4 +53,12 @@ export class ScrapperController {
     ) {
         return this.scrapperService.checkTwitterSubcribe(urlChannel, subcriber);
     }
+
+    @Get('check-rating/google')
+    checkGoogleMapRating(
+        @Query('urlLocation') urlLocation: string,
+        @Query('username') username: string
+    ) {
+        return this.scrapperService.checkGoogleMapRating(urlLocation, username);
+    }
 }
