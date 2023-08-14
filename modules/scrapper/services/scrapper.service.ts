@@ -17,11 +17,18 @@ export class ScrapperService {
         await page.setViewport({ width: 1280, height: 400 });
         await page.goto(urlChannel);
         await page.waitForSelector('#content');
-        const descriptionEle = await page.$('#channel-tagline');
-        const description = await descriptionEle.$eval('#content', element => element.textContent.trim());
+        const userInfoElement = await page.$('#inner-header-container');
+        const userId = await userInfoElement.$eval('yt-formatted-string[id="text"]', element => element.textContent);
+        const username = await userInfoElement.$eval('yt-formatted-string[id="channel-handle"]', element => element.textContent);
+        const description = await userInfoElement.$eval('div[id="content"]', element => element.textContent.trim());
         let isValid = false;
         if (code === description) isValid = true;
-        return isValid;
+        return {
+            userId: userId,
+            username: username,
+            description: description,
+            isValid: isValid
+        };
     }
 
     /**************************************************************************************************************
@@ -54,15 +61,24 @@ export class ScrapperService {
 
     async isValidTiktokAccount(urlChannel: string, code: string) {
         const browser = await puppeteer.launch({ headless: 'new' });
+        const context = browser.defaultBrowserContext();
+        await context.overridePermissions(urlChannel, ['notifications']); 
         const page = await browser.newPage();
         await page.setViewport({ width: 1280, height: 480 });
         await page.goto(urlChannel);
         await page.waitForSelector('.e1457k4r3');
-        const userBioElement = await page.$('.tiktok-1g04lal-DivShareLayoutHeader-StyledDivShareLayoutHeaderV2');
-        const userBio = await userBioElement.$eval('.e1457k4r3', element => element.textContent.trim());
+        const userInfoElement = await page.$('.tiktok-1g04lal-DivShareLayoutHeader-StyledDivShareLayoutHeaderV2');
+        const userId = await userInfoElement.$eval('h1[data-e2e="user-title"]', element => element.textContent.trim());
+        const username = await userInfoElement.$eval('h2[data-e2e="user-subtitle"]', element => element.textContent.trim());
+        const userBio = await userInfoElement.$eval('.e1457k4r3', element => element.textContent.trim());
         let isValid = false;
         if (userBio === code) isValid = true;
-        return isValid;
+        return {
+            userId: userId,
+            username: username,
+            userBio: userBio,
+            isValid: isValid
+        };
     }
 
     /**************************************************************************** 
@@ -91,10 +107,18 @@ export class ScrapperService {
         await page.setViewport({ width: 1280, height: 400 });
         await page.goto(urlPost);
         await page.waitForSelector('div[data-testid="tweetText"]');
+        const userInfoElement = await page.$('div[data-testid="User-Name"]')
+        const userId = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[1].textContent);
+        const username = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[3].textContent);
         const postCode = await page.$eval('div[data-testid="tweetText"]', element => element.querySelector('span').textContent);
         let isValid = false;
         if (code === postCode) isValid = true;
-        return isValid;
+        return {
+            userId: userId,
+            username: username,
+            postCode: postCode,
+            isValid: isValid
+        };
     }
 
     async checkTwitterSubcribe(urlChannel: string, subcriber: string) {
@@ -148,8 +172,8 @@ export class ScrapperService {
         return isExist;
     }
 
-    async checkGoogleMapRating(urlLocation: string, username: string) {
-        const browser = await puppeteer.launch({ headless: false });
+    async checkGoogleMapRating(urlLocation: string, username: string, comment: string) {
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 900, height: 1280 });
         await page.goto(urlLocation);
@@ -161,7 +185,7 @@ export class ScrapperService {
         await page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
         await page.keyboard.press('Backspace', { delay: 1000 });
         await page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', element => {
-            for (let i = 1; i <= 25; i++) {
+            for (let i = 1; i <= 10; i++) {
                 setTimeout(() => {
                     element.scrollBy(0, element.scrollHeight + 1200);
                     console.log("Rating is loading");
@@ -169,25 +193,42 @@ export class ScrapperService {
             }
         });
         /** 
-         * Promise này dùng để chờ sau khi scroll xong hết 30 lần mới lấy danh sách rating
-         * => thời gian chờ của promise = tổng số lần scroll (hiện tại là 30) * 500
+         * Promise này dùng để chờ sau khi scroll xong hết 10 lần mới lấy danh sách rating
+         * => thời gian chờ của promise = tổng số lần scroll (hiện tại là 10) * 500
          */
         const promise = new Promise((resolve
-            ) => {
+        ) => {
             setTimeout(async () => {
                 resolve(await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
                     ratingInfo => {
                         return {
                             username: ratingInfo.getAttribute('aria-label'),
-                            description: ratingInfo.querySelector('.wiI7pd')?.innerHTML,
+                            rating: ratingInfo.querySelector('.kvMYJc').getAttribute('aria-label'),
+                            comment: ratingInfo.querySelector('.wiI7pd')?.innerHTML,
                             timeRating: ratingInfo.querySelector('.rsqaWe').innerHTML,
                         }
                     }
                 )))
-            }, 12500); 
+            }, 5000);
         });
         const users: any = await promise;
-        console.log(users.length);
-        return users;
+        console.log('Total Users: ', users.length);
+        
+        let isValid = false;
+        let userInfo;
+        users.forEach(user => {
+            if (user.username === username && user.comment === comment) {
+                isValid = true;
+                userInfo = {
+                    username: user.username,
+                    rating: user.rating,
+                    comment: user.comment,
+                    timeRating: user.timeRating,
+                    isValid: isValid
+                }
+                return;
+            }
+        });
+        return userInfo ? userInfo : "User not Exist";
     }
 }

@@ -57,8 +57,9 @@ export class ScrapperController {
     @Get('check-rating/google')
     checkGoogleMapRating(
         @Query('urlLocation') urlLocation: string,
-        @Query('username') username: string
+        @Query('username') username: string,
+        @Query('comment') comment: string
     ) {
-        return this.scrapperService.checkGoogleMapRating(urlLocation, username);
+        return this.scrapperService.checkGoogleMapRating(urlLocation, username, comment);
     }
 }
