@@ -1,6 +1,7 @@
 import { 
     Controller,
     Query,
+    Body,
     Get,
 } from "@nestjs/common";
 import { ScrapperService } from "../services/scrapper.service";
@@ -17,12 +18,12 @@ export class ScrapperController {
         return this.scrapperService.isValidYoutubeAccount(urlChannel, code);
     }
 
-    @Get('check-subcribe/youtube')
-    checkYoutubeSubcribe(
-        @Query('urlChannel') urlChannel: string,
-        @Query('subcriber')  subcriber: string
+    @Get('check-subscribe/youtube')
+    checkYoutubeSubscribe(
+        @Body('urlChannel') urlChannel: string,
+        @Body('subscriber')  subscriber: string[]
     ) {
-        return this.scrapperService.checkYoutubeSubcribe(urlChannel, subcriber);
+        return this.scrapperService.checkYoutubeSubscribe(urlChannel, subscriber);
     }
 
     @Get('check-valid/tiktok')
@@ -33,9 +34,9 @@ export class ScrapperController {
         return this.scrapperService.isValidTiktokAccount(urlChannel, code);
     }
 
-    // @Get('check-subcribe/tiktok')
-    // checkTiktokSubcribe(@Query('urlChannel') urlChannel: string,) {
-    //     return this.scrapperService.checkTiktokSubcribe(urlChannel);
+    // @Get('check-subscribe/tiktok')
+    // checkTiktokSubscribe(@Query('urlChannel') urlChannel: string,) {
+    //     return this.scrapperService.checkTiktokSubscribe(urlChannel);
     // }
 
     @Get('check-valid/twitter')
@@ -46,12 +47,12 @@ export class ScrapperController {
         return this.scrapperService.isValidTwitterAccount(urlPost, code);
     }
 
-    @Get('check-subcribe/twitter')
-    checkTwitterSubcribe(
-        @Query('urlChannel') urlChannel: string,
-        @Query('subcriber')  subcriber: string
+    @Get('check-subscribe/twitter')
+    checkTwitterSubscribe(
+        @Body('urlChannel') urlChannel: string,
+        @Body('subscriber')  subscriber: string[]
     ) {
-        return this.scrapperService.checkTwitterSubcribe(urlChannel, subcriber);
+        return this.scrapperService.checkTwitterSubscribe(urlChannel, subscriber);
     }
 
     @Get('check-rating/google')
@@ -61,5 +62,37 @@ export class ScrapperController {
         @Query('comment') comment: string
     ) {
         return this.scrapperService.checkGoogleMapRating(urlLocation, username, comment);
+    }
+
+    @Get('check-valid/facebook')
+    isValidFacebookAccount(
+        @Query('urlChannel') urlChannel: string,
+        @Query('code') code: string
+    ) {
+        return this.scrapperService.isValidFacebookAccount(urlChannel, code);
+    }
+    
+    @Get('check-subscribe/facebook')
+    checkFacebookSubscribe(
+        @Body('urlChannel') urlChannel: string,
+        @Body('subscriber')  subscriber: string[]
+    ) {
+        return this.scrapperService.checkFacebookSubscribe(urlChannel, subscriber);
+    }
+
+    @Get('check-valid/instagram')
+    isValidInstagramAccount(
+        @Query('urlChannel') urlChannel: string,
+        @Query('code') code: string
+    ) {
+        return this.scrapperService.isValidInstagramAccount(urlChannel, code);
+    }
+    
+    @Get('check-subscribe/instagram')
+    checkInstagramSubscribe(
+        @Body('urlChannel') urlChannel: string,
+        @Body('subscriber')  subscriber: string[]
+    ) {
+        return this.scrapperService.checkInstagramSubscribe(urlChannel, subscriber);
     }
 }
