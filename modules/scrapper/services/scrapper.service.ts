@@ -340,6 +340,27 @@ export class ScrapperService {
         };
     }
 
+    async downloadFacebookVideo(urlVideo: string) {
+        const browser = await puppeteer.launch({ headless: 'new' });
+        const page = await browser.newPage();
+        const context = browser.defaultBrowserContext();
+        await context.overridePermissions('https://www.facebook.com/', ['notifications']);
+        await page.setViewport({ width: 1080, height: 960 });
+        await page.goto('https://www.facebook.com/');
+        await page.click('input[name="email"]');
+        await page.keyboard.sendCharacter('letanthanh049@gmail.com');
+        await page.click('input[name="pass"]');
+        await page.keyboard.sendCharacter('thanh10052001!');
+        await page.click('button[type="submit"]');
+        await page.waitForNavigation();
+        const mbasicUrl = urlVideo.replace('www', 'mbasic');
+        await page.goto(mbasicUrl);
+        const newUrl = page.url();
+        const selector = newUrl.includes('groups') ? '.bz' : '.widePic'
+        const downloadLink = await page.$eval(selector, element => element.querySelector('a').getAttribute('href'));
+        return `https://mbasic.facebook.com${downloadLink}`;
+    }
+
     async isValidInstagramAccount(urlChannel: string, code: string) {
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();

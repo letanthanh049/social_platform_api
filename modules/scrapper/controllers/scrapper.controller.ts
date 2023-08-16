@@ -80,6 +80,11 @@ export class ScrapperController {
         return this.scrapperService.checkFacebookSubscribe(urlChannel, subscriber);
     }
 
+    @Get('download/video/facebook')
+    downloadFacebookVideo(@Body('urlVideo') urlVideo: string) {
+        return this.scrapperService.downloadFacebookVideo(urlVideo);
+    }
+
     @Get('check-valid/instagram')
     isValidInstagramAccount(
         @Query('urlChannel') urlChannel: string,
