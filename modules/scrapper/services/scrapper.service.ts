@@ -225,8 +225,7 @@ export class ScrapperService {
          * Promise này dùng để chờ sau khi scroll xong hết 10 lần mới lấy danh sách rating
          * => thời gian chờ của promise = tổng số lần scroll (hiện tại là 10) * 500
          */
-        const promise = new Promise((resolve
-        ) => {
+        const promise = new Promise(resolve => {
             setTimeout(async () => {
                 resolve(await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
                     ratingInfo => {
@@ -372,28 +371,55 @@ export class ScrapperService {
         const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
         await page.setViewport({ width: 1080, height: 960 });
-        await page.goto(`${urlChannel}/following`);
         /* Phần đăng nhập */
+        await page.goto('https://www.instagram.com/');
+        await page.waitForSelector('input[name="username"]');
+        await page.click('input[name="username"]');
+        await page.keyboard.sendCharacter('GofiberV1521');
+        await page.click('input[name="password"]');
+        await page.keyboard.sendCharacter('thanh10052001!');
+        await page.click('button[type="submit"]');
+        await page.waitForNavigation();
+
         /* Phần danh sách theo dõi */
-        await page.waitForSelector('._aano');
+        await page.goto(`${urlChannel}/following`);
+        await page.keyboard.press('Space', { delay: 3000 });
         const userInfoElement = await page.$('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('h2', element => element.textContent);
         const username = await userInfoElement.$eval('.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x193iq5w.xeuugli.x1fj9vlw.x13faqbe.x1vvkbs.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x1i0vuye.xvs91rp.x1s688f', element => element.textContent);
         const description = await userInfoElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
-        const followingList = await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3', 
-            elements => elements.map(
-                element => {
-                    return {
-                        avatar: element.querySelector('._aarf').querySelector('img').getAttribute('scr'),
-                        userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
-                        username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
-                    }
-                }
-            ));
-        // browser.close();
-        console.log(followingList);
-        
+        await page.$eval('._aano', async element => {
+            for (let i = 1; i <= 16; i++) {
+                setTimeout(() => {
+                    element.scrollBy(0, 800);
+                }, i * 500);
+            }
+        });
+        const promise = new Promise(resolve => {
+            setTimeout(async () => {
+                resolve(await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
+                    elements => elements.map(
+                        element => {
+                            return {
+                                link: element.querySelector('a').getAttribute('href'),
+                                avatar: element.querySelector('img').getAttribute('src'),
+                                userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
+                                username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
+                            };
+                        }
+                    )));
+            }, 8500);
+        });
+        const followingList: any = await promise;
+        // console.log(followingList.length);
+        browser.close();
+
+        followingList.forEach(following => {
+            uncompleteList.forEach((sub, index) => {
+                if (following.link === sub) completeList.push(uncompleteList.splice(index, 1)[0]);
+            })
+        })
         return {
             subscriber: subscriber,
             userInfo: {
