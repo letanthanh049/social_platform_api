@@ -202,7 +202,7 @@ export class ScrapperService {
     }
 
     async checkGoogleMapRating(urlLocation: string, username: string, comment: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
+        const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
         await page.setViewport({ width: 900, height: 1280 });
         await page.goto(urlLocation);
@@ -229,12 +229,19 @@ export class ScrapperService {
             setTimeout(async () => {
                 resolve(await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
                     ratingInfo => {
+                        const regrexLink = /(https?:\/\/[^\s&]+)(?<!&quote)/g;
+                        let pictures = [];
+                        if (ratingInfo.querySelector('.KtCyie')) {
+                            const str = ratingInfo.querySelector('.KtCyie').innerHTML;
+                            pictures = str.match(regrexLink);
+                        }
                         return {
                             avatar: ratingInfo.querySelector('img').getAttribute('src'),
                             username: ratingInfo.getAttribute('aria-label'),
                             rating: ratingInfo.querySelector('.kvMYJc').getAttribute('aria-label'),
                             comment: ratingInfo.querySelector('.wiI7pd')?.innerHTML,
                             timeRating: ratingInfo.querySelector('.rsqaWe').innerHTML,
+                            pictures: pictures
                         }
                     }
                 )))
@@ -253,11 +260,12 @@ export class ScrapperService {
                     rating: user.rating,
                     comment: user.comment,
                     timeRating: user.timeRating,
+                    pictures: user.pictures
                 }
                 return;
             }
         });
-        return userInfo ? userInfo : "User not Exist";
+        return userInfo;
     }
 
     async isValidFacebookAccount(urlChannel: string, code: string) {
