@@ -150,7 +150,7 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 1300, height: 4000 });
         /* Phần đăng nhập */
@@ -202,54 +202,52 @@ export class ScrapperService {
     }
 
     async checkGoogleMapRating(urlLocation: string, username: string, comment: string) {
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 900, height: 1280 });
         await page.goto(urlLocation);
-        await page.waitForSelector('.RWPxGd');
+        await page.waitForSelector('.RWPxGd button:nth-child(2)');
         await page.click('.RWPxGd button:nth-child(2)');
         await page.waitForSelector('button[aria-label="Sort reviews"]');
         await page.click('button[aria-label="Sort reviews"]');
         await page.waitForSelector('div[role="menuitemradio"]');
         await page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
         await page.keyboard.press('Backspace', { delay: 1000 });
-        await page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', element => {
-            for (let i = 1; i <= 10; i++) {
+        await page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', async element => {
+            for (let i = 1; i <= 5; i++) {
                 setTimeout(() => {
                     element.scrollBy(0, element.scrollHeight + 1200);
                     console.log("Rating is loading");
                 }, i * 500);
             }
         });
-        /** 
-         * Promise này dùng để chờ sau khi scroll xong hết 10 lần mới lấy danh sách rating
-         * => thời gian chờ của promise = tổng số lần scroll (hiện tại là 10) * 500
-         */
-        const promise = new Promise(resolve => {
-            setTimeout(async () => {
-                resolve(await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
-                    ratingInfo => {
-                        const regrexLink = /(https?:\/\/[^\s&]+)(?<!&quote)/g;
-                        let pictures = [];
-                        if (ratingInfo.querySelector('.KtCyie')) {
-                            const str = ratingInfo.querySelector('.KtCyie').innerHTML;
-                            pictures = str.match(regrexLink);
-                        }
-                        return {
-                            avatar: ratingInfo.querySelector('img').getAttribute('src'),
-                            username: ratingInfo.getAttribute('aria-label'),
-                            rating: ratingInfo.querySelector('.kvMYJc').getAttribute('aria-label'),
-                            comment: ratingInfo.querySelector('.wiI7pd')?.innerHTML,
-                            timeRating: ratingInfo.querySelector('.rsqaWe').innerHTML,
-                            pictures: pictures
-                        }
-                    }
-                )))
-            }, 5000);
-        });
-        const users: any = await promise;
+        await page.keyboard.press('Backspace', { delay: 2600 });
+        await page.$$eval('button[jsaction="pane.review.showMorePhotos;keydown:pane.review.showMorePhotos;focus:pane.focusTooltip;blur:pane.blurTooltip"]',
+            elements => elements.map(element => {
+                element.click()
+                console.log(element.innerHTML);
+            })
+        );
+        const users = await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
+            ratingInfo => {
+                const regrexLink = /(https?:\/\/[^\s&]+)(?<!&quote)/g;
+                let pictures = [];
+                if (ratingInfo.querySelector('.KtCyie')) {
+                    const str = ratingInfo.querySelector('.KtCyie').innerHTML;
+                    pictures = str.match(regrexLink);
+                }
+                return {
+                    avatar: ratingInfo.querySelector('img').getAttribute('src'),
+                    username: ratingInfo.getAttribute('aria-label'),
+                    rating: ratingInfo.querySelector('.kvMYJc').getAttribute('aria-label'),
+                    comment: ratingInfo.querySelector('.wiI7pd')?.innerHTML.replaceAll('amp;', ''),
+                    timeRating: ratingInfo.querySelector('.rsqaWe').innerHTML,
+                    pictures: pictures
+                }
+            }
+        ))
         // console.log('Total Users: ', users.length);
-        await browser.close();
+        // await browser.close();
 
         let userInfo;
         users.forEach(user => {
@@ -397,7 +395,7 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.setViewport({ width: 1080, height: 960 });
         /* Phần đăng nhập */
@@ -425,23 +423,19 @@ export class ScrapperService {
                 }, i * 500);
             }
         });
-        const promise = new Promise(resolve => {
-            setTimeout(async () => {
-                resolve(await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
-                    elements => elements.map(
-                        element => {
-                            return {
-                                link: element.querySelector('a').getAttribute('href'),
-                                avatar: element.querySelector('img').getAttribute('src'),
-                                userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
-                                username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
-                            };
-                        }
-                    )));
-            }, 8500);
-        });
-        const followingList: any = await promise;
-        // console.log(followingList.length);
+        await page.keyboard.press('Backspace', {delay: 8500})
+        const followingList = await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
+        elements => elements.map(
+            element => {
+                return {
+                    link: element.querySelector('a').getAttribute('href'),
+                    avatar: element.querySelector('img').getAttribute('src'),
+                    userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
+                    username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
+                };
+            }
+        ));
+        console.log(followingList.length);
         browser.close();
 
         followingList.forEach(following => {
