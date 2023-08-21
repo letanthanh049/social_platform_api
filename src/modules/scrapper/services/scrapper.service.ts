@@ -200,7 +200,7 @@ export class ScrapperService {
         await page.goto(urlLocation);
         await page.waitForSelector('.RWPxGd button:nth-child(2)');
         await page.click('.RWPxGd button:nth-child(2)');
-        await page.waitForSelector('button[aria-label="Sort reviews"]');
+        await page.keyboard.press('Backspace', { delay: 1000 });
         await page.click('button[aria-label="Sort reviews"]');
         await page.waitForSelector('div[role="menuitemradio"]');
         await page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
