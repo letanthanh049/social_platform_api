@@ -1,16 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { Scrapper } from "../schema/scrapper.schema";
-import { InjectModel } from "@nestjs/mongoose";
-import mongoose from "mongoose";
 import puppeteer from "puppeteer";
 
 @Injectable()
 export class ScrapperService {
-    constructor(
-        @InjectModel(Scrapper.name)
-        private readonly scrapperModel: mongoose.Model<Scrapper>
-    ) { }
-
     async isValidYoutubeAccount(urlChannel: string, code: string) {
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
