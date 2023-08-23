@@ -387,7 +387,7 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: 'new' });
+        const browser = await puppeteer.launch({ headless: false });
         const page = await browser.newPage();
         await page.setViewport({ width: 1080, height: 960 });
         /* Phần đăng nhập */
@@ -407,15 +407,21 @@ export class ScrapperService {
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('h2', element => element.textContent);
         const username = await userInfoElement.$eval('.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x193iq5w.xeuugli.x1fj9vlw.x13faqbe.x1vvkbs.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x1i0vuye.xvs91rp.x1s688f', element => element.textContent);
-        const description = await userInfoElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
+        const descriptionElement = await userInfoElement.$('._aacl._aaco._aacu._aacx._aad6._aade');
+        let description = undefined;
+        if (descriptionElement) description = await descriptionElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
         await page.$eval('._aano', async element => {
-            for (let i = 1; i <= 16; i++) {
+            for (let i = 1; i <= 15; i++) {
+                if (i == 1 || i == 2)
+                    setTimeout(() => {
+                        element.scrollBy(0, 1200);
+                    }, i * 500);
                 setTimeout(() => {
                     element.scrollBy(0, 800);
                 }, i * 500);
             }
         });
-        await page.keyboard.press('Backspace', {delay: 8500})
+        await page.keyboard.press('Backspace', {delay: 7500})
         const followingList = await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
         elements => elements.map(
             element => {
