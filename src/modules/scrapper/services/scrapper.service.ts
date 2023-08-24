@@ -1,20 +1,30 @@
-import { Injectable } from "@nestjs/common";
-import puppeteer from "puppeteer";
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import puppeteer, { Page } from "puppeteer";
 
 @Injectable()
-export class ScrapperService {
+export class ScrapperService implements OnModuleInit {
+    private pageWidth = 1360;
+    private page: Page;
+
+    async onModuleInit() {
+        const browser = await puppeteer.launch({ headless: false });
+        const context = browser.defaultBrowserContext();
+        /**
+         * Mặc định sẽ override lên toàn bộ origin nếu không set gì hết
+         */
+        await context.overridePermissions(undefined, ['notifications']);
+        this.page = await browser.newPage();
+    }
+
     async isValidYoutubeAccount(urlChannel: string, code: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 400 });
-        await page.goto(urlChannel);
-        await page.waitForSelector('#content');
-        const userInfoElement = await page.$('#channel-header-container');
+        await this.page.setViewport({ width: this.pageWidth, height: 400 });
+        await this.page.goto(urlChannel);
+        await this.page.waitForSelector('#content');
+        const userInfoElement = await this.page.$('#channel-header-container');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('yt-formatted-string[id="text"]', element => element.textContent);
         const username = await userInfoElement.$eval('yt-formatted-string[id="channel-handle"]', element => element.textContent);
         const description = await userInfoElement.$eval('div[id="content"]', element => element.textContent.trim());
-        await browser.close();
 
         let isValid = false;
         if (code === description) isValid = true;
@@ -37,23 +47,22 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 10000 });
-        await page.goto(urlChannel);
-        await page.waitForSelector('#content');
-        const userInfoElement = await page.$('#channel-header-container');
+        await this.page.setViewport({ width: this.pageWidth, height: 10000 });
+        await this.page.goto(urlChannel);
+        await this.page.waitForSelector('#content');
+        const userInfoElement = await this.page.$('#channel-header-container');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('yt-formatted-string[id="text"]', element => element.textContent);
         const username = await userInfoElement.$eval('yt-formatted-string[id="channel-handle"]', element => element.textContent);
         const description = await userInfoElement.$eval('div[id="content"]', element => element.textContent.trim());
-        await page.keyboard.press('Backspace', { delay: 1500 });
-        const channels = await page.$$eval('#contents #items ytd-grid-channel-renderer',
+        await this.page.keyboard.press('Backspace', { delay: 1500 });
+        const channels = await this.page.$$eval('#contents #items ytd-grid-channel-renderer',
             elements => elements.map(
                 channel => channel.querySelector('#channel-info').getAttribute('href')
             ));
-        await browser.close();
 
+        // console.log('Youtube Total Subscribed Channel:', followingList.length);
+        // console.log('Youtube Subscribed List:', followingList);
         channels.forEach(ch => {
             uncompleteList.forEach((sub, index) => {
                 if (ch === sub) completeList.push(uncompleteList.splice(index, 1)[0]);
@@ -73,19 +82,14 @@ export class ScrapperService {
     };
 
     async isValidTiktokAccount(urlChannel: string, code: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const context = browser.defaultBrowserContext();
-        await context.overridePermissions(urlChannel, ['notifications']);
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 480 });
-        await page.goto(urlChannel);
-        await page.waitForSelector('.e1457k4r3');
-        const userInfoElement = await page.$('.tiktok-1g04lal-DivShareLayoutHeader-StyledDivShareLayoutHeaderV2');
+        await this.page.setViewport({ width: this.pageWidth, height: 480 });
+        await this.page.goto(urlChannel);
+        await this.page.waitForSelector('.e1457k4r3');
+        const userInfoElement = await this.page.$('.tiktok-1g04lal-DivShareLayoutHeader-StyledDivShareLayoutHeaderV2');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('h1[data-e2e="user-title"]', element => element.textContent);
         const username = await userInfoElement.$eval('h2[data-e2e="user-subtitle"]', element => element.textContent);
         const userBio = await userInfoElement.$eval('.e1457k4r3', element => element.textContent.trim());
-        await browser.close();
 
         let isValid = false;
         if (userBio === code) isValid = true;
@@ -114,18 +118,15 @@ export class ScrapperService {
     // }
 
     async isValidTwitterAccount(urlPost: string, code: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1280, height: 400 });
-        await page.goto(urlPost);
-        await page.waitForSelector('div[data-testid="tweetText"]');
-        await page.waitForSelector('.css-9pa8cd');
-        const userInfoElement = await page.$('.css-1dbjc4n.r-18u37iz.r-15zivkp');
+        await this.page.setViewport({ width: this.pageWidth, height: 480 });
+        await this.page.goto(urlPost);
+        await this.page.waitForSelector('div[data-testid="tweetText"]');
+        await this.page.waitForSelector('.css-9pa8cd');
+        const userInfoElement = await this.page.$('.css-1dbjc4n.r-18u37iz.r-15zivkp');
         const avatar = await userInfoElement.$eval('.css-9pa8cd', element => element.getAttribute('src'));
         const userId = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[1].textContent);
         const username = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[3].textContent);
-        const postCode = await page.$eval('div[data-testid="tweetText"]', element => element.querySelector('span').textContent);
-        await browser.close();
+        const postCode = await this.page.$eval('div[data-testid="tweetText"]', element => element.querySelector('span').textContent);
 
         let isValid = false;
         if (code === postCode) isValid = true;
@@ -142,40 +143,43 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1300, height: 4000 });
         /* Phần đăng nhập */
-        await page.goto('https://twitter.com/i/flow/login');
-        await page.waitForSelector('input[autocomplete="username"]');
-        await page.click('input[autocomplete="username"]');
-        await page.keyboard.sendCharacter('thanhlt1521@gmail.com');
-        await page.keyboard.press('Enter');
-        await page.waitForSelector('input[autocomplete="on"]');
-        await page.click('input[autocomplete="on"]');
-        await page.keyboard.sendCharacter('GofiberV1521');
-        await page.keyboard.press('Enter');
-        await page.waitForSelector('input[autocomplete="current-password"]');
-        await page.click('input[autocomplete="current-password"]');
-        await page.keyboard.sendCharacter('thanh10052001!');
-        await page.keyboard.press('Enter');
-        await page.waitForSelector('div[aria-label="Account menu"]');
-        const userInfoElement = await page.$('div[aria-label="Account menu"]');
+        await this.page.setViewport({ width: this.pageWidth, height: 9000 });
+        await this.page.goto('https://twitter.com/home');
+        await this.page.keyboard.press('Backspace', {delay: 1000});
+        if (this.page.url() === 'https://twitter.com/i/flow/login') {
+            await this.page.waitForSelector('input[autocomplete="username"]');
+            await this.page.click('input[autocomplete="username"]');
+            await this.page.keyboard.sendCharacter('thanhlt1521@gmail.com');
+            await this.page.keyboard.press('Enter');
+            await this.page.waitForSelector('input[autocomplete="on"]');
+            await this.page.click('input[autocomplete="on"]');
+            await this.page.keyboard.sendCharacter('GofiberV1521');
+            await this.page.keyboard.press('Enter');
+            await this.page.waitForSelector('input[autocomplete="current-password"]');
+            await this.page.click('input[autocomplete="current-password"]');
+            await this.page.keyboard.sendCharacter('thanh10052001!');
+            await this.page.keyboard.press('Enter');
+            await this.page.waitForNavigation();
+        }
+        await this.page.keyboard.press('Backspace', {delay: 1000});
+        const userInfoElement = await this.page.$('div[aria-label="Account menu"]');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[1].textContent);
         const username = await userInfoElement.$$eval('.css-901oao.css-16my406.r-poiln3.r-bcqeeo.r-qvutc0', elements => elements[4].textContent);
-
+        
         /* Phần danh sách theo dõi */
-        await page.goto(urlChannel);
-        await page.keyboard.press('Space', { delay: 4000 });
-        const containerElement = await page.$('section[role=region]');
+        await this.page.goto(urlChannel);
+        await this.page.keyboard.press('Space', { delay: 2000 });
+        const containerElement = await this.page.$('section[role=region]');
         const followingList = await containerElement
             .$$eval('.css-1dbjc4n.r-onrtq4.r-18kxxzh.r-1h0z5md.r-1b7u577',
                 elements => elements.map(
                     user => user.querySelector('a').getAttribute('href')
                 ));
-        await browser.close();
 
+        // console.log('Twitter Total Following:', followingList.length);
+        // console.log('Twitter Following List:', followingList);
         followingList.forEach(user => {
             uncompleteList.forEach((sub, index) => {
                 if (user === sub) completeList.push(uncompleteList.splice(index, 1)[0]);
@@ -194,33 +198,31 @@ export class ScrapperService {
     }
 
     async checkGoogleMapRating(urlLocation: string, username: string, comment: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 900, height: 1280 });
-        await page.goto(urlLocation);
-        await page.waitForSelector('.RWPxGd button:nth-child(2)');
-        await page.click('.RWPxGd button:nth-child(2)');
-        await page.keyboard.press('Backspace', { delay: 1000 });
-        await page.click('button[aria-label="Sort reviews"]');
-        await page.waitForSelector('div[role="menuitemradio"]');
-        await page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
-        await page.keyboard.press('Backspace', { delay: 1000 });
-        await page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', async element => {
-            for (let i = 1; i <= 5; i++) {
-                setTimeout(() => {
-                    element.scrollBy(0, element.scrollHeight + 1200);
-                    console.log("Rating is loading");
-                }, i * 500);
-            }
-        });
-        await page.keyboard.press('Backspace', { delay: 2600 });
-        await page.$$eval('button[jsaction="pane.review.showMorePhotos;keydown:pane.review.showMorePhotos;focus:pane.focusTooltip;blur:pane.blurTooltip"]',
+        await this.page.setViewport({ width: this.pageWidth, height: 8000 });
+        await this.page.goto(urlLocation);
+        await this.page.waitForSelector('.RWPxGd button:nth-child(2)');
+        await this.page.click('.RWPxGd button:nth-child(2)');
+        await this.page.keyboard.press('Backspace', { delay: 1000 });
+        await this.page.click('button[aria-label="Sort reviews"]');
+        await this.page.waitForSelector('div[role="menuitemradio"]');
+        await this.page.click('.fontBodyLarge.yu5kgd>div:nth-child(2)');
+        await this.page.keyboard.press('Backspace', { delay: 1000 });
+        // await this.page.$eval('.m6QErb.DxyBCb.kA9KIf.dS8AEf', async element => {
+        //     for (let i = 1; i <= 5; i++) {
+        //         setTimeout(() => {
+        //             element.scrollBy(0, element.scrollHeight + 1200);
+        //             console.log("Rating is loading");
+        //         }, i * 500);
+        //     }
+        // });
+        await this.page.keyboard.press('Backspace', { delay: 2600 });
+        await this.page.$$eval('button[jsaction="pane.review.showMorePhotos;keydown:pane.review.showMorePhotos;focus:pane.focusTooltip;blur:pane.blurTooltip"]',
             elements => elements.map(element => {
                 element.click()
                 console.log(element.innerHTML);
             })
         );
-        const users = await page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
+        const users = await this.page.$$eval('.jftiEf.fontBodyMedium', elements => elements.map(
             ratingInfo => {
                 const regrexLink = /(https?:\/\/[^\s&]+)(?<!&quote)/g;
                 let pictures = [];
@@ -238,10 +240,9 @@ export class ScrapperService {
                 }
             }
         ))
-        // console.log('Total Users: ', users.length);
-        // await browser.close();
 
-        let userInfo;
+        console.log('Total Users: ', users.length);
+        let userInfo: any = 'User not Exist!';
         users.forEach(user => {
             if (user.username === username && user.comment === comment) {
                 userInfo = {
@@ -259,17 +260,14 @@ export class ScrapperService {
     }
 
     async isValidFacebookAccount(urlChannel: string, code: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 960, height: 400 });
-        await page.goto(urlChannel);
-        await page.waitForSelector('.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs');
-        const userInfoElement = await page.$('div[role="article"]');
+        await this.page.setViewport({ width: this.pageWidth, height: 400 });
+        await this.page.goto(urlChannel);
+        await this.page.waitForSelector('.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs');
+        const userInfoElement = await this.page.$('div[role="article"]');
         const avatar = await userInfoElement.$eval('object', element => element.querySelector('image').getAttribute('xlink:href'));
         const userId = urlChannel.slice(25, urlChannel.indexOf("/posts/"));
         const username = await userInfoElement.$eval('strong>span', element => element.textContent);
         const postCode = await userInfoElement.$eval('.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.x1vvkbs', element => element.textContent);
-        await browser.close();
 
         let isValid = false;
         if (code === postCode) isValid = true;
@@ -286,28 +284,27 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const context = browser.defaultBrowserContext();
-        await context.overridePermissions(urlChannel, ['notifications']);
-        const page = await browser.newPage();
-        await page.setViewport({ width: 800, height: 4000 });
+        await this.page.setViewport({ width: this.pageWidth, height: 4000 });
         /* Phần đăng nhập */
-        await page.goto(urlChannel);
-        await page.waitForSelector('#login_popup_cta_form');
-        await (await (await page.$('#login_popup_cta_form')).$('input[name="email"]')).click();
-        await page.keyboard.sendCharacter('thanhlt1521@gmail.com');
-        await (await (await page.$('#login_popup_cta_form')).$('input[name="pass"]')).click();
-        await page.keyboard.sendCharacter('thanh10052001!');
-        await (await (await page.$('#login_popup_cta_form')).$('div[aria-label="Accessible login button"]')).click();
-        await page.waitForNavigation();
+        await this.page.goto(urlChannel);
+        await this.page.keyboard.press('Backspace', {delay: 1000});
+        try {
+            await this.page.$eval('#login_popup_cta_form', element => element);
+            await (await (await this.page.$('#login_popup_cta_form')).$('input[name="email"]')).click();
+            await this.page.keyboard.sendCharacter('thanhlt1521@gmail.com');
+            await (await (await this.page.$('#login_popup_cta_form')).$('input[name="pass"]')).click();
+            await this.page.keyboard.sendCharacter('thanh10052001!');
+            await (await (await this.page.$('#login_popup_cta_form')).$('div[aria-label="Accessible login button"]')).click();
+            await this.page.waitForNavigation();
+        } catch {}
 
         /* Phần danh sách theo dõi */
-        await page.goto(urlChannel + '/following');
-        await page.keyboard.press('Space', { delay: 10000 });
-        const avatar = await page.$eval('.x15sbx0n.x1xy773u.x390vds.xb2vh1x.x14xzxk9.x18u1y24.xs6kywh.x5wy4b0',
+        await this.page.goto(urlChannel + '/following');
+        await this.page.keyboard.press('Space', { delay: 10000 });
+        const avatar = await this.page.$eval('.x15sbx0n.x1xy773u.x390vds.xb2vh1x.x14xzxk9.x18u1y24.xs6kywh.x5wy4b0',
             element => element.querySelector('image').getAttribute('xlink:href'));
-        const username = await page.$eval('.x78zum5.xdt5ytf.x1wsgfga.x9otpla', element => element.textContent);
-        const followingList = await page.$$eval('.x6s0dn4.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x1olyfxc.x9f619.x78zum5.x1e56ztr.x1gefphp.x1y1aw1k.x1sxyh0.xwib8y2.xurb0ha',
+        const username = await this.page.$eval('.x78zum5.xdt5ytf.x1wsgfga.x9otpla', element => element.textContent);
+        const followingList = await this.page.$$eval(':not(div[role="progressbar"])>.x6s0dn4.x1lq5wgf.xgqcy7u.x30kzoy.x9jhf4c.x1olyfxc.x9f619.x78zum5.x1e56ztr.xyamay9.x1pi30zi.x1l90r2v.x1swvt13.x1gefphp',
             elements => elements.map(
                 element => {
                     return {
@@ -318,10 +315,9 @@ export class ScrapperService {
                     }
                 }
             ));
-        browser.close();
 
-        console.log('Total: ', followingList.length);
-        // console.log(followingList);
+        // console.log('Facebook Total Following:', followingList.length);
+        // console.log('Facebook Following List:', followingList);
         followingList.forEach(user => {
             uncompleteList.forEach((sub, index) => {
                 if (user.link === sub) completeList.push(uncompleteList.splice(index, 1)[0]);
@@ -339,38 +335,31 @@ export class ScrapperService {
     }
 
     async downloadFacebookVideo(urlVideo: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        const context = browser.defaultBrowserContext();
-        await context.overridePermissions('https://www.facebook.com/', ['notifications']);
-        await page.setViewport({ width: 1080, height: 960 });
-        await page.goto('https://www.facebook.com/');
-        await page.click('input[name="email"]');
-        await page.keyboard.sendCharacter('letanthanh049@gmail.com');
-        await page.click('input[name="pass"]');
-        await page.keyboard.sendCharacter('thanh10052001!');
-        await page.click('button[type="submit"]');
-        await page.waitForNavigation();
+        await this.page.setViewport({ width: this.pageWidth, height: 960 });
+        await this.page.goto('https://www.facebook.com/');
+        await this.page.click('input[name="email"]');
+        await this.page.keyboard.sendCharacter('letanthanh049@gmail.com');
+        await this.page.click('input[name="pass"]');
+        await this.page.keyboard.sendCharacter('thanh10052001!');
+        await this.page.click('button[type="submit"]');
+        await this.page.waitForNavigation();
         const mbasicUrl = urlVideo.replace('www', 'mbasic');
-        await page.goto(mbasicUrl);
-        const newUrl = page.url();
+        await this.page.goto(mbasicUrl);
+        const newUrl = this.page.url();
         const selector = newUrl.includes('groups') ? '.bz' : '.widePic'
-        const downloadLink = await page.$eval(selector, element => element.querySelector('a').getAttribute('href'));
+        const downloadLink = await this.page.$eval(selector, element => element.querySelector('a').getAttribute('href'));
         return `https://mbasic.facebook.com${downloadLink}`;
     }
 
     async isValidInstagramAccount(urlChannel: string, code: string) {
-        const browser = await puppeteer.launch({ headless: 'new' });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1080, height: 960 });
-        await page.goto(urlChannel);
-        await page.waitForSelector('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
-        const userInfoElement = await page.$('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
+        await this.page.setViewport({ width: this.pageWidth, height: 960 });
+        await this.page.goto(urlChannel);
+        await this.page.waitForSelector('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
+        const userInfoElement = await this.page.$('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('h2', element => element.textContent);
         const username = await userInfoElement.$eval('.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x193iq5w.xeuugli.x1fj9vlw.x13faqbe.x1vvkbs.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x1i0vuye.xvs91rp.x1s688f', element => element.textContent);
         const description = await userInfoElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
-        await browser.close();
 
         let isValid = false;
         if (code === description) isValid = true;
@@ -387,55 +376,60 @@ export class ScrapperService {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 
-        const browser = await puppeteer.launch({ headless: false });
-        const page = await browser.newPage();
-        await page.setViewport({ width: 1080, height: 960 });
+        await this.page.setViewport({ width: this.pageWidth, height: 960 });
         /* Phần đăng nhập */
-        await page.goto('https://www.instagram.com/');
-        await page.waitForSelector('input[name="username"]');
-        await page.click('input[name="username"]');
-        await page.keyboard.sendCharacter('GofiberV1521');
-        await page.click('input[name="password"]');
-        await page.keyboard.sendCharacter('thanh10052001!');
-        await page.click('button[type="submit"]');
-        await page.waitForNavigation();
+        await this.page.goto('https://www.instagram.com/');
+        await this.page.keyboard.press('Backspace', {delay: 1000});
+        try {
+            await this.page.$eval('._ab1y', element => element);
+            await this.page.waitForSelector('input[name="username"]');
+            await this.page.click('input[name="username"]');
+            await this.page.keyboard.sendCharacter('GofiberV1521');
+            await this.page.click('input[name="password"]');
+            await this.page.keyboard.sendCharacter('thanh10052001!');
+            await this.page.click('button[type="submit"]');
+            await this.page.waitForNavigation();
+        } catch {}
 
         /* Phần danh sách theo dõi */
-        await page.goto(`${urlChannel}/following`);
-        await page.keyboard.press('Space', { delay: 3000 });
-        const userInfoElement = await page.$('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
+        await this.page.goto(`${urlChannel}following`);
+        await this.page.keyboard.press('Space', { delay: 3000 });
+        const userInfoElement = await this.page.$('.x1qjc9v5.x78zum5.x1q0g3np.x2lah0s.x1n2onr6.x1qsaojo.xc2v4qs.x1xl8k2i.x1ez9qw7.x1kcpa7z');
         const avatar = await userInfoElement.$eval('img', element => element.getAttribute('src'));
         const userId = await userInfoElement.$eval('h2', element => element.textContent);
         const username = await userInfoElement.$eval('.x1lliihq.x1plvlek.xryxfnj.x1n2onr6.x193iq5w.xeuugli.x1fj9vlw.x13faqbe.x1vvkbs.x1s928wv.xhkezso.x1gmr53x.x1cpjm7i.x1fgarty.x1943h6x.x1i0vuye.xvs91rp.x1s688f', element => element.textContent);
-        const descriptionElement = await userInfoElement.$('._aacl._aaco._aacu._aacx._aad6._aade');
         let description = undefined;
-        if (descriptionElement) description = await descriptionElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
-        await page.$eval('._aano', async element => {
-            for (let i = 1; i <= 15; i++) {
+        try {
+            description = await userInfoElement.$eval('._aacl._aaco._aacu._aacx._aad6._aade', element => element.textContent);
+        } catch (error) {
+            console.log(error);
+        }
+        await this.page.$eval('._aano', async element => {
+            for (let i = 1; i <= 10; i++) {
                 if (i == 1 || i == 2)
                     setTimeout(() => {
                         element.scrollBy(0, 1200);
                     }, i * 500);
                 setTimeout(() => {
                     element.scrollBy(0, 800);
-                }, i * 500);
+                }, i * 800);
             }
         });
-        await page.keyboard.press('Backspace', {delay: 7500})
-        const followingList = await page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
-        elements => elements.map(
-            element => {
-                return {
-                    link: element.querySelector('a').getAttribute('href'),
-                    avatar: element.querySelector('img').getAttribute('src'),
-                    userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
-                    username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
-                };
-            }
-        ));
-        console.log(followingList.length);
-        browser.close();
+        await this.page.keyboard.press('Backspace', { delay: 9000 })
+        const followingList = await this.page.$$eval('.x1dm5mii.x16mil14.xiojian.x1yutycm.x1lliihq.x193iq5w.xh8yej3',
+            elements => elements.map(
+                element => {
+                    return {
+                        link: element.querySelector('a').getAttribute('href'),
+                        avatar: element.querySelector('img').getAttribute('src'),
+                        userid: element.querySelector('._aacl._aaco._aacw._aacx._aad7._aade').textContent,
+                        username: element.querySelector('.x1lliihq.x193iq5w.x6ikm8r.x10wlt62.xlyipyv.xuxw1ft')?.textContent,
+                    };
+                }
+            ));
 
+        // console.log('Instagram Total Following:', followingList.length);
+        // console.log('Instagram Following List:', followingList);
         followingList.forEach(following => {
             uncompleteList.forEach((sub, index) => {
                 if (following.link === sub) completeList.push(uncompleteList.splice(index, 1)[0]);
