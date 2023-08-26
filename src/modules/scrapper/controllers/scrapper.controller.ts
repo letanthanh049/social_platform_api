@@ -26,6 +26,14 @@ export class ScrapperController {
         return this.scrapperService.checkYoutubeSubscribe(urlChannel, subscriber);
     }
 
+    @Get('check-comment/youtube')
+    checkYoutubeComment(
+        @Body('urlChannel') urlChannel: string,
+        @Body('comment')  comment: string
+    ) {
+        return this.scrapperService.checkYoutubeComment(urlChannel, comment);
+    }
+
     @Get('check-valid/tiktok')
     isValidTiktokAccount(
         @Query('urlChannel') urlChannel: string,

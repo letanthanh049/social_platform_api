@@ -7,7 +7,7 @@ export class ScrapperService implements OnModuleInit {
     private page: Page;
 
     async onModuleInit() {
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const context = browser.defaultBrowserContext();
         /**
          * Mặc định sẽ override lên toàn bộ origin nếu không set gì hết
@@ -80,6 +80,40 @@ export class ScrapperService implements OnModuleInit {
             }
         };
     };
+
+    async checkYoutubeComment(urlVideo: string, comment: string) {
+        await this.page.setViewport({ width: this.pageWidth, height: 2500 });
+        await this.page.goto(urlVideo);
+        await this.page.keyboard.press('Backspace', {delay: 3000});
+        await this.page.click('.style-scope.tp-yt-paper-menu-button');
+        await this.page.keyboard.press('Backspace', {delay: 500});
+        await this.page.click('a.yt-simple-endpoint.style-scope.yt-dropdown-menu:nth-child(2)');
+        await this.page.keyboard.press('Backspace', {delay: 1000});
+        const comments = await this.page.$$eval('ytd-comment-thread-renderer[class="style-scope ytd-item-section-renderer"]', 
+            comments => comments.map(
+                comment => 
+                { 
+                    return {
+                        link: comment.querySelector('a').getAttribute('href'),
+                        avatar: comment.querySelector('img').getAttribute('src'),
+                        username: comment.querySelector('#author-text>span').textContent.trim(),
+                        comment: comment.querySelector('#comment-content').querySelector('#content-text').textContent,
+                        timeComment: comment.querySelector('.yt-simple-endpoint.style-scope.yt-formatted-string').textContent,
+                    }
+                }
+            ));
+        
+        console.log('Total comment', comments.length);
+        console.log(comments);
+        let commentInfo;
+        comments.forEach(cmt => {
+            if (cmt.comment === comment) {
+                commentInfo = cmt;
+                return;
+            }
+        })
+        return commentInfo;
+    }
 
     async isValidTiktokAccount(urlChannel: string, code: string) {
         await this.page.setViewport({ width: this.pageWidth, height: 480 });
