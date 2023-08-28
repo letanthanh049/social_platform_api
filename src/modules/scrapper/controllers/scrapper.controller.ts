@@ -63,6 +63,14 @@ export class ScrapperController {
         return this.scrapperService.checkTwitterSubscribe(urlChannel, subscriber);
     }
 
+    @Get('check-comment/twitter')
+    checkTwitterComment(
+        @Body('urlPost') urlPost: string,
+        @Body('comment') comment: string
+    ) {
+        return this.scrapperService.checkTwitterComment(urlPost, comment);
+    }
+
     @Get('check-rating/google')
     checkGoogleMapRating(
         @Body('urlLocation') urlLocation: string,
@@ -88,6 +96,14 @@ export class ScrapperController {
         return this.scrapperService.checkFacebookSubscribe(urlChannel, subscriber);
     }
 
+    @Get('check-comment/facebook')
+    checkFacebookComment(
+        @Body('urlPost') urlPost: string,
+        @Body('comment') comment: string
+    ) {
+        return this.scrapperService.checkFacebookComment(urlPost, comment);
+    }
+
     @Get('download/video/facebook')
     downloadFacebookVideo(@Body('urlVideo') urlVideo: string) {
         return this.scrapperService.downloadFacebookVideo(urlVideo);
@@ -107,5 +123,13 @@ export class ScrapperController {
         @Body('subscriber')  subscriber: string[]
     ) {
         return this.scrapperService.checkInstagramSubscribe(urlChannel, subscriber);
+    }
+
+    @Get('check-comment/instagram')
+    checkInstagramComment(
+        @Body('urlPost') urlPost: string,
+        @Body('comment') comment: string
+    ) {
+        return this.scrapperService.checkInstagramComment(urlPost, comment);
     }
 }
