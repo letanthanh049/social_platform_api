@@ -96,8 +96,8 @@ export class ScrapperService implements OnModuleInit {
                 }
             ));
 
-        // console.log('Total comment', comments.length);
-        // console.log(comments);
+        console.log('Total comment', comments.length);
+        console.log(comments);
         let commentInfo = undefined;
         comments.forEach(cmt => {
             if (cmt.comment === comment) {
@@ -419,7 +419,7 @@ export class ScrapperService implements OnModuleInit {
         await this.page.keyboard.press('Backspace', { delay: 3000 });
         await this.page.click('div[class="x6s0dn4 x78zum5 xdj266r x11i5rnm xat24cr x1mh8g0r xe0p6wg"]');
         await this.page.click('div[role="menuitem"]:nth-child(2)');
-        await this.page.keyboard.press('Backspace', { delay: 500 });
+        await this.page.keyboard.press('Backspace', { delay: 1000 });
         await this.page.$eval('div[class="xwnonoy x1ey2m1c xg01cxk x10l6tqk x13vifvy x1k90msu x19991ni xz4gly6 xfo62xy x1p629oc"]', 
             element => element.parentElement.querySelector('span').click());
         await this.page.keyboard.press('Backspace', { delay: 2000 });
