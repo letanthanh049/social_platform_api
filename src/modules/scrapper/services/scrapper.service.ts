@@ -263,6 +263,7 @@ export class ScrapperService implements OnModuleInit {
                     }
                 }
             ));
+
         console.log(comments);
         console.log('Total comments: ', comments.length);
         let commentInfo = undefined;
@@ -413,9 +414,38 @@ export class ScrapperService implements OnModuleInit {
     }
 
     async checkFacebookComment(urlPost: string, comment: string) {
-        await this.page.setViewport({ width: this.pageWidth, height: 900 });
+        await this.page.setViewport({ width: this.pageWidth, height: 1280 });
         await this.page.goto(urlPost);
-        return comment;
+        await this.page.keyboard.press('Backspace', { delay: 3000 });
+        await this.page.click('div[class="x6s0dn4 x78zum5 xdj266r x11i5rnm xat24cr x1mh8g0r xe0p6wg"]');
+        await this.page.click('div[role="menuitem"]:nth-child(2)');
+        await this.page.keyboard.press('Backspace', { delay: 500 });
+        await this.page.$eval('div[class="xwnonoy x1ey2m1c xg01cxk x10l6tqk x13vifvy x1k90msu x19991ni xz4gly6 xfo62xy x1p629oc"]', 
+            element => element.parentElement.querySelector('span').click());
+        await this.page.keyboard.press('Backspace', { delay: 2000 });
+        const comments = await this.page.$$eval('div[class="x1jx94hy x12nagc"] ul li:has(div[class="xqcrz7y x14yjl9h xudhj91 x18nykt9 xww2gxu x1lliihq x1w0mnb xr9ek0c x1n2onr6"])', 
+            comments => comments.map(
+                comment => {
+                    return {
+                        link: comment.querySelector('a').getAttribute('href'),
+                        avatar: comment.querySelector('image').getAttribute('xlink:href'),
+                        username: comment.querySelector('span[class="x3nfvp2"]').textContent,
+                        comment: comment.querySelector('div[class="xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs"]').textContent,
+                        timeComment: comment.querySelector('div[class="x6s0dn4 x3nfvp2"] a span').textContent
+                    }
+                }
+            ));
+
+        // console.log('Total comment: ', comments.length);
+        // console.log(comments);
+        let commentInfo = undefined;
+        comments.forEach(cmt => {
+            if (cmt.comment === comment) {
+                commentInfo = cmt;
+                return;
+            }
+        })
+        return commentInfo;
     }
 
     async downloadFacebookVideo(urlVideo: string) {
