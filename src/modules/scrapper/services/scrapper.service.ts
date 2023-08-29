@@ -423,7 +423,7 @@ export class ScrapperService implements OnModuleInit {
         await this.page.$eval('div[class="xwnonoy x1ey2m1c xg01cxk x10l6tqk x13vifvy x1k90msu x19991ni xz4gly6 xfo62xy x1p629oc"]', 
             element => element.parentElement.querySelector('span').click());
         await this.page.keyboard.press('Backspace', { delay: 2000 });
-        const comments = await this.page.$$eval('div[class="x1jx94hy x12nagc"] ul li:has(div[class="xqcrz7y x14yjl9h xudhj91 x18nykt9 xww2gxu x1lliihq x1w0mnb xr9ek0c x1n2onr6"])', 
+        const comments = await this.page.$$eval('div[class="x2bj2ny x12nagc"] ul li:has(div[class="xqcrz7y x14yjl9h xudhj91 x18nykt9 xww2gxu x1lliihq x1w0mnb xr9ek0c x1n2onr6"])', 
             comments => comments.map(
                 comment => {
                     return {
