@@ -277,7 +277,7 @@ export class ScrapperService implements OnModuleInit {
     }
 
     async checkGoogleMapRating(urlLocation: string, username: string, comment: string) {
-        await this.page.setViewport({ width: this.pageWidth, height: 8000 });
+        await this.page.setViewport({ width: this.pageWidth, height: 4000 });
         await this.page.goto(urlLocation);
         await this.page.waitForSelector('.RWPxGd button:nth-child(2)');
         await this.page.click('.RWPxGd button:nth-child(2)');
@@ -294,7 +294,7 @@ export class ScrapperService implements OnModuleInit {
         //         }, i * 500);
         //     }
         // });
-        await this.page.keyboard.press('Backspace', { delay: 2600 });
+        await this.page.keyboard.press('Backspace', { delay: 3000 });
         await this.page.$$eval('button[jsaction="pane.review.showMorePhotos;keydown:pane.review.showMorePhotos;focus:pane.focusTooltip;blur:pane.blurTooltip"]',
             elements => elements.map(element => {
                 element.click()
