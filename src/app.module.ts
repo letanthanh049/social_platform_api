@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
-import { YoutubeModule } from './modules/youtube/youtube.module';
 import { ConfigModule } from '@nestjs/config';
-import { TiktokModule } from './modules/tiktok/tiktok.module';
-import { TwitterModule } from './modules/twitter/twitter.module';
 import { ScrapperModule } from './modules/scrapper/scrapper.module';
 
 @Module({
@@ -11,9 +8,6 @@ import { ScrapperModule } from './modules/scrapper/scrapper.module';
             envFilePath: '.env',
             isGlobal: true
         }),
-        YoutubeModule,
-        TiktokModule,
-        TwitterModule,
         ScrapperModule
     ],
     controllers: [],
