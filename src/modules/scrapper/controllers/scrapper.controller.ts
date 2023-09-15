@@ -17,12 +17,12 @@ export class ScrapperController {
         return this.scrapperService.isValidFacebookAccount(urlProfile, code);
     }
     
-    @Get('check-subscribe/facebook')
-    checkFacebookSubscribe(
+    @Get('check-follower/facebook')
+    checkFacebookFollower(
         @Body('urlProfile') urlProfile: string,
-        @Body('subscriber')  subscriber: string[]
+        @Body('follower')  follower: string[]
     ) {
-        return this.scrapperService.checkFacebookSubscribe(urlProfile, subscriber);
+        return this.scrapperService.checkFacebookFollower(urlProfile, follower);
     }
 
     @Get('check-comment/facebook')
@@ -46,12 +46,12 @@ export class ScrapperController {
         return this.scrapperService.isValidInstagramAccount(urlChannel, code);
     }
     
-    @Get('check-subscribe/instagram')
-    checkInstagramSubscribe(
+    @Get('check-follower/instagram')
+    checkInstagramFollower(
         @Body('urlChannel') urlChannel: string,
-        @Body('subscriber')  subscriber: string[]
+        @Body('follower')  follower: string[]
     ) {
-        return this.scrapperService.checkInstagramSubscribe(urlChannel, subscriber);
+        return this.scrapperService.checkInstagramFollower(urlChannel, follower);
     }
 
     @Get('check-valid/twitter')
@@ -62,12 +62,12 @@ export class ScrapperController {
         return this.scrapperService.isValidTwitterAccount(urlTweet, code);
     }
 
-    @Get('check-subscribe/twitter')
-    checkTwitterSubscribe(
+    @Get('check-follower/twitter')
+    checkTwitterFollower(
         @Body('urlChannel') urlChannel: string,
-        @Body('subscriber')  subscriber: string[]
+        @Body('follower')  follower: string[]
     ) {
-        return this.scrapperService.checkTwitterSubscribe(urlChannel, subscriber);
+        return this.scrapperService.checkTwitterFollower(urlChannel, follower);
     }
 
     @Get('check-comment/twitter')
@@ -94,12 +94,12 @@ export class ScrapperController {
         return this.scrapperService.isValidYoutubeAccount(urlChannel, code);
     }
 
-    @Get('check-subscribe/youtube')
+    @Get('check-subscriber/youtube')
     checkYoutubeSubscribe(
         @Body('urlChannel') urlChannel: string,
         @Body('subscriber')  subscriber: string[]
     ) {
-        return this.scrapperService.checkYoutubeSubscribe(urlChannel, subscriber);
+        return this.scrapperService.checkYoutubeSubscriber(urlChannel, subscriber);
     }
 
     @Get('check-comment/youtube')

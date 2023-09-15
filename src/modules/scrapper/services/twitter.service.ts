@@ -30,9 +30,9 @@ export class TwitterService {
         };
     }
 
-    async checkTwitterSubscribe(urlChannel: string, subscriber: string[]) {
+    async checkTwitterFollower(urlChannel: string, follower: string[]) {
         const completeList = [];
-        const uncompleteList = subscriber.slice();
+        const uncompleteList = follower.slice();
 
         /* Phần đăng nhập */
         await this.page.setViewport({ width: this.pageWidth, height: 9000 });
@@ -77,7 +77,7 @@ export class TwitterService {
             })
         });
         return {
-            subscriber: subscriber,
+            follower: follower,
             userInfo: {
                 avatar: avatar,
                 userId: userId,
@@ -114,7 +114,7 @@ export class TwitterService {
         await this.page.keyboard.press('Backspace', { delay: 2000 });
         await this.page.evaluate(() => {window.scrollBy(0, window.innerHeight + 2000)});
         await this.page.keyboard.press('Backspace', { delay: 2000 });
-        const comments = await this.page.$$eval('div[class="css-1dbjc4n r-13qz1uu"] div[data-testid="cellInnerDiv"]:not(:first-child) div.css-1dbjc4n.r-16y2uox.r-1wbh5a2.r-1ny4l3l', 
+        const comments = await this.page.$$eval('div[data-testid="cellInnerDiv"]:not(:first-child) article[data-testid="tweet"]', 
             comments => comments.map(
                 comment => {
                     return {

@@ -19,7 +19,7 @@ export class ScrapperService implements OnModuleInit {
     private youtubeService: YoutubeService;
 
     async onModuleInit() {
-        const browser = await puppeteer.launch({ headless: false });
+        const browser = await puppeteer.launch({ headless: 'new' });
         const context = browser.defaultBrowserContext();
         /**
          * Mặc định sẽ override lên toàn bộ origin nếu không set gì hết
@@ -38,8 +38,8 @@ export class ScrapperService implements OnModuleInit {
         return this.facebookService.isValidFacebookAccount(urlProfile, code);
     }
 
-    async checkFacebookSubscribe(urlProfile: string, subscriber: string[]) {
-        return this.facebookService.checkFacebookSubscribe(urlProfile, subscriber);
+    async checkFacebookFollower(urlProfile: string, subscriber: string[]) {
+        return this.facebookService.checkFacebookFollower(urlProfile, subscriber);
     }
 
     async checkFacebookComment(urlPost: string, comment: string) {
@@ -54,16 +54,16 @@ export class ScrapperService implements OnModuleInit {
         return this.instagramService.isValidInstagramAccount(urlChannel, code);
     }
 
-    async checkInstagramSubscribe(urlChannel: string, subscriber: string[]) {
-        return this.instagramService.checkInstagramSubscribe(urlChannel, subscriber);
+    async checkInstagramFollower(urlChannel: string, Follower: string[]) {
+        return this.instagramService.checkInstagramFollower(urlChannel, Follower);
     }
 
     async isValidTwitterAccount(urlTweet: string, code: string) {
         return this.twitterService.isValidTwitterAccount(urlTweet, code);
     }
 
-    async checkTwitterSubscribe(urlChannel: string, subscriber: string[]) {
-        return this.twitterService.checkTwitterSubscribe(urlChannel, subscriber);
+    async checkTwitterFollower(urlChannel: string, follower: string[]) {
+        return this.twitterService.checkTwitterFollower(urlChannel, follower);
     }
 
     async checkTwitterComment(urlTweet: string, comment: string) {
@@ -82,8 +82,8 @@ export class ScrapperService implements OnModuleInit {
         return this.youtubeService.isValidYoutubeAccount(urlChannel, code);
     }
 
-    async checkYoutubeSubscribe(urlChannel: string, subscriber: string[]) {
-        return this.youtubeService.checkYoutubeSubscribe(urlChannel, subscriber);
+    async checkYoutubeSubscriber(urlChannel: string, subscriber: string[]) {
+        return this.youtubeService.checkYoutubeSubscriber(urlChannel, subscriber);
     }
 
     async checkYoutubeComment(urlVideo: string, comment: string) {

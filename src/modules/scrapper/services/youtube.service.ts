@@ -29,7 +29,7 @@ export class YoutubeService {
         };
     }
 
-    async checkYoutubeSubscribe(urlChannel: string, subscriber: string[]) {
+    async checkYoutubeSubscriber(urlChannel: string, subscriber: string[]) {
         const completeList = [];
         const uncompleteList = subscriber.slice();
 

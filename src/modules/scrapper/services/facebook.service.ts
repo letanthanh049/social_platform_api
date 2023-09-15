@@ -29,9 +29,9 @@ export class FacebookService {
         };
     }
 
-    async checkFacebookSubscribe(urlProfile: string, subscriber: string[]) {
+    async checkFacebookFollower(urlProfile: string, follower: string[]) {
         const completeList = [];
-        const uncompleteList = subscriber.slice();
+        const uncompleteList = follower.slice();
 
         await this.page.setViewport({ width: this.pageWidth, height: 4000 });
         /* Phần đăng nhập */
@@ -73,7 +73,7 @@ export class FacebookService {
             })
         });
         return {
-            subscriber: subscriber,
+            follower: follower,
             userInfo: {
                 avatar: avatar,
                 username: username,

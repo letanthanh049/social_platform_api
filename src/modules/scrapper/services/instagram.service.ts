@@ -29,9 +29,9 @@ export class InstagramService {
         };
     }
 
-    async checkInstagramSubscribe(urlChannel: string, subscriber: string[]) { 
+    async checkInstagramFollower(urlChannel: string, follower: string[]) { 
         const completeList = [];
-        const uncompleteList = subscriber.slice();
+        const uncompleteList = follower.slice();
 
         await this.page.setViewport({ width: this.pageWidth, height: 960 });
         /* Phần đăng nhập */
@@ -93,7 +93,7 @@ export class InstagramService {
             })
         })
         return {
-            subscriber: subscriber,
+            follower: follower,
             userInfo: {
                 avatar: avatar,
                 userId: userId,
